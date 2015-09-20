@@ -9,6 +9,7 @@ import (
 	"github.com/docker/swarm/discovery"
 )
 
+
 // Discovery is exported
 type Discovery struct {
 	heartbeat time.Duration

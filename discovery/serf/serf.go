@@ -9,15 +9,10 @@ import (
   "github.com/docker/swarm/discovery"
 )
 
-// DiscoveryUrl is exported
-const DiscoveryURL = "https://discovery.hub.docker.com/v1"
-
 // Discovery is exported
 type Discovery struct {
   heartbeat time.Duration
-  ttl       time.Duration
-  url       string
-  token     string
+  serf  string
 }
 
 func init() {
@@ -31,9 +26,8 @@ func Init() {
 
 // Initialize is exported
 func (s *Discovery) Initialize(ip_port string, heartbeat time.Duration, ttl time.Duration) error {
-  s.url = ip_port
+  s.serf = ip_port
   s.heartbeat = heartbeat
-  s.ttl = ttl
 
   // Launch the agent in standby
   err := exec.Command("./launch_agent.sh").Run()
@@ -113,8 +107,7 @@ func (s *Discovery) Watch(stopCh <-chan struct{}) (<-chan discovery.Entries, <-c
 
 // Register adds a new entry identified by the into the discovery service
 func (s *Discovery) Register(addr string) error {
-  // Launch the agent in standby
-  err := exec.Command("./agent_join.sh", s.url).Run()
+  err := exec.Command("./agent_join.sh", s.serf).Run()
   if err != nil {
     return err
   }
