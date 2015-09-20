@@ -1,4 +1,4 @@
-package token
+package serf
 
 import (
 	"testing"
