@@ -1,11 +1,7 @@
 package serf
 
 import (
-  "encoding/json"
   "errors"
-  "fmt"
-  "io/ioutil"
-  "net/http"
   "strings"
   "time"
   "os/exec"
@@ -35,7 +31,7 @@ func Init() {
 
 // Initialize is exported
 func (s *Discovery) Initialize(ip_port string, heartbeat time.Duration, ttl time.Duration) error {
-  s.ip_port = ip_port
+  s.url = ip_port
   s.heartbeat = heartbeat
   s.ttl = ttl
 
@@ -59,14 +55,14 @@ func (s *Discovery) fetch() (discovery.Entries, error) {
   }
 
 
-  lines = strings.Split(output, "\n")
+  lines := strings.Split(string(output[:]), "\n")
   var addrs []string
-  for line := range fields {
+  for _, line := range lines {
     fields := strings.Fields(line)
-    if len(field) != 3 {
+    if len(fields) != 3 {
       return nil, errors.New("Error while parsing the output of serf members : Wrong number of fields")
     }
-    append(addrs, field[1])
+    addrs = append(addrs, fields[1])
   }
 
   return discovery.CreateEntries(addrs)
@@ -118,7 +114,7 @@ func (s *Discovery) Watch(stopCh <-chan struct{}) (<-chan discovery.Entries, <-c
 // Register adds a new entry identified by the into the discovery service
 func (s *Discovery) Register(addr string) error {
   // Launch the agent in standby
-  err := exec.Command("./agent_join.sh", s.ip_port).Run()
+  err := exec.Command("./agent_join.sh", s.url).Run()
   if err != nil {
     return err
   }
