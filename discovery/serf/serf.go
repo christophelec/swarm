@@ -5,6 +5,7 @@ import (
   "strings"
   "time"
   "os/exec"
+	"fmt"
 
   "github.com/docker/swarm/discovery"
 )
@@ -51,6 +52,9 @@ func (s *Discovery) fetch() (discovery.Entries, error) {
 
   lines := strings.Split(string(output[:]), "\n")
   var addrs []string
+  fmt.Println("-----------")
+  fmt.Println(string(output[:]))
+  fmt.Println("-----------")
   for _, line := range lines {
     fields := strings.Fields(line)
     if len(fields) != 3 {

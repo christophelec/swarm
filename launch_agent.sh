@@ -1,3 +1,3 @@
 #!/bin/sh
 
-echo "launching agent !"
+echo "launching agent !" >> ~/.launched

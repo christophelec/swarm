@@ -1,3 +1,3 @@
 #!/bin/sh
 
-echo "Joining $1"
+echo "Joining $1" >> ~/.joined
