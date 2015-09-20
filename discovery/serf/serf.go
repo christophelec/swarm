@@ -50,13 +50,15 @@ func (s *Discovery) fetch() (discovery.Entries, error) {
   }
 
 
-  lines := strings.Split(string(output[:]), "\n")
+  all_lines := strings.Split(string(output[:]), "\n")
+  lines := all_lines[:len(all_lines) - 1]
   var addrs []string
   fmt.Println("-----------")
   fmt.Println(string(output[:]))
   fmt.Println("-----------")
   for _, line := range lines {
     fields := strings.Fields(line)
+    fmt.Println("FIELDS %d", len(fields))
     if len(fields) != 3 {
       return nil, errors.New("Error while parsing the output of serf members : Wrong number of fields")
     }
