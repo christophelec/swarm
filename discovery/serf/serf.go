@@ -29,45 +29,24 @@ func init() {
 
 // Init is exported
 func Init() {
-	discovery.Register("token", &Discovery{})
+	discovery.Register("serf", &Discovery{})
 }
 
 // Initialize is exported
-func (s *Discovery) Initialize(urltoken string, heartbeat time.Duration, ttl time.Duration) error {
-	if i := strings.LastIndex(urltoken, "/"); i != -1 {
-		s.url = "https://" + urltoken[:i]
-		s.token = urltoken[i+1:]
-	} else {
-		s.url = DiscoveryURL
-		s.token = urltoken
-	}
-
-	if s.token == "" {
-		return errors.New("token is empty")
-	}
-	s.heartbeat = heartbeat
+func (s *Discovery) Initialize(ip_port string, heartbeat time.Duration, ttl time.Duration) error {
+  s.ip_port = ip_port
+  s.heartbeat = heartbeat
 	s.ttl = ttl
+
+  // Launch the agent in standby maybe?
 
 	return nil
 }
 
 // Fetch returns the list of entries for the discovery service at the specified endpoint
 func (s *Discovery) fetch() (discovery.Entries, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/%s/%s", s.url, "clusters", s.token))
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	var addrs []string
-	if resp.StatusCode == http.StatusOK {
-		if err := json.NewDecoder(resp.Body).Decode(&addrs); err != nil {
-			return nil, fmt.Errorf("Failed to decode response: %v", err)
-		}
-	} else {
-		return nil, fmt.Errorf("Failed to fetch entries, Discovery service returned %d HTTP status code", resp.StatusCode)
-	}
+  // Here, we contact the serf agent and ask for a list of members
+  // We have to send back entries, which are basically a host and a port (see discovery.go)
 
 	return discovery.CreateEntries(addrs)
 }
@@ -117,6 +96,9 @@ func (s *Discovery) Watch(stopCh <-chan struct{}) (<-chan discovery.Entries, <-c
 
 // Register adds a new entry identified by the into the discovery service
 func (s *Discovery) Register(addr string) error {
+  // We need to launch the agent with the correct configuration here
+  // Exec ?
+
 	buf := strings.NewReader(addr)
 
 	resp, err := http.Post(fmt.Sprintf("%s/%s/%s?ttl=%d", s.url,
@@ -128,16 +110,4 @@ func (s *Discovery) Register(addr string) error {
 
 	resp.Body.Close()
 	return nil
-}
-
-// CreateCluster returns a unique cluster token
-func (s *Discovery) CreateCluster() (string, error) {
-	resp, err := http.Post(fmt.Sprintf("%s/%s", s.url, "clusters"), "", nil)
-	if err != nil {
-		return "", err
-	}
-
-	defer resp.Body.Close()
-	token, err := ioutil.ReadAll(resp.Body)
-	return string(token), err
 }
