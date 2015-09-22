@@ -5,7 +5,7 @@ import (
   "strings"
   "time"
   "os/exec"
-	"fmt"
+  "fmt"
 
   "github.com/docker/swarm/discovery"
 )
@@ -30,8 +30,10 @@ func (s *Discovery) Initialize(ip_port string, heartbeat time.Duration, ttl time
   s.serf = ip_port
   s.heartbeat = heartbeat
 
+  sTab := strings.Split(ip_port, "@")
+
   // Launch the agent in standby
-  err := exec.Command("./launch_agent.sh").Run()
+  err := exec.Command("./launch_agent.sh", sTab[1]).Run()
   if err != nil {
     return err
   }
@@ -53,9 +55,6 @@ func (s *Discovery) fetch() (discovery.Entries, error) {
   all_lines := strings.Split(string(output[:]), "\n")
   lines := all_lines[:len(all_lines) - 1]
   var addrs []string
-  fmt.Println("-----------")
-  fmt.Println(string(output[:]))
-  fmt.Println("-----------")
   for _, line := range lines {
     fields := strings.Fields(line)
     fmt.Println("FIELDS %d", len(fields))
@@ -113,7 +112,8 @@ func (s *Discovery) Watch(stopCh <-chan struct{}) (<-chan discovery.Entries, <-c
 
 // Register adds a new entry identified by the into the discovery service
 func (s *Discovery) Register(addr string) error {
-  err := exec.Command("./agent_join.sh", s.serf).Run()
+  sTab := strings.Split(s.serf, "@")
+  err := exec.Command("./agent_join.sh", sTab[0]).Run()
   if err != nil {
     return err
   }
